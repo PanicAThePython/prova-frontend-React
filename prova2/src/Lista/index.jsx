@@ -167,10 +167,12 @@ import datas from './data.json'
 //     }
 // }
 let valores
+let level = 0
 const renderiza = item => {
     valores = Object.entries(item)
     valores = valores[1][1]
     valores = Object.entries(valores)
+    level = valores[3][1]
     // let resultado = [];
     // resultado[0] = valores[0][1]
     // resultado[1] = valores[1][1]
@@ -185,7 +187,7 @@ const renderiza = item => {
         // console.log(key+" "+value)
         Object.entries(value).map(renderiza)
     ):(
-        <Item type={key} value={value}/>
+        <Item type={key} value={value} level={level}/>
         // console.log(key+" "+value)
 
     )
@@ -203,11 +205,14 @@ const renderiza = item => {
 //     </ul>
 // )
 
-const Item = ({key, value}) =>{
+const Item = ({key, value, level}) =>{
     const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    // if (typeof value == 'number'){
+    //     level = value
+    //     console.log(level)
+    // }
     if (typeof value == 'string' && letras.match(value[0])){
-        // return (<p>{level}</p>)
-        switch(valores[3][1]){
+        switch(level){
             case 0:
                 return (
                     <li>
