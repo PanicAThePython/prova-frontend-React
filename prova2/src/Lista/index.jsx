@@ -97,15 +97,20 @@ const clicked = e =>{
             }
         }
         let fathers = [... inputs].splice(0, initialPosition)
+        let fathersIndex = []
     
         for (let j = initialPosition-1; j >= 0; j--){
             let comparingLevel = fathers[j].getAttribute("data-level")
-            console.log(comparingLevel)
-            console.log(lev)
+
+            //verificar se já há um elemento de tal nível como indeterminate,
+            //para evitar que elementos "irmãos" tenham indeterminate
             
             if (comparingLevel < lev){
-                fathers[j].indeterminate = true
+                if (fathersIndex.find(index => index === comparingLevel) == undefined){
+                    fathers[j].indeterminate = true
+                }
             }
+            fathersIndex.push(comparingLevel)
         }
     }
     else{
