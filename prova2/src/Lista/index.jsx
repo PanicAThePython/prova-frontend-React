@@ -37,35 +37,35 @@ const Item = ({key, value, level, position}) =>{
                 return (
                     <li>
                         <input type='checkbox' onClick={clicked} data-position={position} data-level={level}/>
-                        <label>{value+""}</label>
+                        <label onDoubleClick={hideAndShow} data-hiding={false} data-position={position} data-level={level}>{value+""}</label>
                     </li>
                     )
             case 1:
                 return (
                     <ul><li>
                         <input type='checkbox' onClick={clicked} data-position={position} data-level={level}/>
-                        <label>{value+""}</label>
+                        <label onDoubleClick={hideAndShow} data-hiding={false} data-position={position} data-level={level}>{value+""}</label>
                     </li></ul>
                     )
             case 2:
                 return (
                     <ul><ul><li>
                         <input type='checkbox' onClick={clicked} data-position={position} data-level={level}/>
-                        <label>{value+""}</label>
+                        <label onDoubleClick={hideAndShow} data-hiding={false} data-position={position} data-level={level}>{value+""}</label>
                     </li></ul></ul>
                     )
             case 3:
                 return (
                     <ul><ul><ul><li>
                         <input type='checkbox' onClick={clicked} data-position={position} data-level={level}/>
-                        <label>{value+""}</label>
+                        <label onDoubleClick={hideAndShow} data-hiding={false} data-position={position} data-level={level}>{value+""}</label>
                     </li></ul></ul></ul>
                     )
             case 4:
                 return (
                     <ul><ul><ul><ul><li>
                         <input type='checkbox' onClick={clicked} data-position={position} data-level={level}/>
-                        <label>{value+""}</label>
+                        <label onDoubleClick={hideAndShow} data-hiding={false} data-position={position} data-level={level}>{value+""}</label>
                     </li></ul></ul></ul></ul>
                     )
             default:
@@ -78,66 +78,87 @@ const Item = ({key, value, level, position}) =>{
     }
 }
     
+const inputs = document.getElementsByTagName('input')
+let pos
+let lev
+
 const clicked = e =>{
-    const inputs = document.getElementsByTagName('input')
-    let pos = e.target.getAttribute("data-position")
-    const lev = e.target.getAttribute("data-level")
+    pos = e.target.getAttribute("data-position")
+    lev = e.target.getAttribute("data-level")
     let initialPosition = pos
 
     if (inputs[pos].checked){
-        pos++
-        
-        for (let i = pos; i < inputs.length; i++){
-            let comparingLevel = inputs[i].getAttribute("data-level")
-            if (comparingLevel > lev){
-                inputs[i].checked = true
-            }
-            else{
-                break
-            }
-        }
-        let fathers = [... inputs].splice(0, initialPosition)
-        let fathersIndex = []
-    
-        for (let j = initialPosition-1; j >= 0; j--){
-            let comparingLevel = fathers[j].getAttribute("data-level")
-
-            //verificar se já há um elemento de tal nível como indeterminate,
-            //para evitar que elementos "irmãos" tenham indeterminate
-            
-            if (comparingLevel < lev){
-                if (fathersIndex.find(index => index === comparingLevel) == undefined){
-                    fathers[j].indeterminate = true
-                }
-            }
-            fathersIndex.push(comparingLevel)
-        }
+        isChecked(true)
+        indeterminatingDads(true, initialPosition)
     }
     else{
-        // console.log(pos)
-        // for (let i = pos; i < inputs.length; i++){
-        //     let comparingLevel = inputs[i].getAttribute("data-level")
-        //     console.log(inputs[i])
-        //     console.log(lev)
-        //     if (comparingLevel >= lev){
-        //         inputs[i].checked = false
-        //     }
-        //     else{
-        //         break
-        //     }
-        // }
-        // let fathers = [... inputs].splice(0, initialPosition)
-    
-        // for (let j = initialPosition-1; j >= 0; j--){
-        //     let comparingLevel = fathers[j].getAttribute("data-level")
-            
-        //     if (comparingLevel < lev){
-        //         fathers[j].indeterminate = false
-        //     }
-        // }
+        isChecked(false)
+        indeterminatingDads(false, initialPosition)
     }
     
 }
 
+const lis = document.getElementsByTagName('li')
+const labels = document.getElementsByTagName('label')
+
+const hideAndShow = e =>{
+    pos = e.target.getAttribute("data-position")
+    lev = e.target.getAttribute("data-level")
+
+    if (labels[pos].getAttribute("data-hiding") === 'false'){
+        isDisplay('none')
+        e.target.setAttribute('data-hiding', true)
+    }
+    else{
+        isDisplay('list-item')
+        e.target.setAttribute('data-hiding', false)
+    }
+}
+
 const Lista = () => <ul>{Object.entries(datas).map(renderiza)}</ul>
 export default Lista
+
+function isDisplay(type){
+    pos++
+    for (let i = pos; i < inputs.length; i++){
+        let comparingLevel = inputs[i].getAttribute("data-level")
+        if (comparingLevel > lev){
+            lis[i].style.display = type
+        }
+        else{
+            break
+        }
+    } 
+}
+
+function isChecked(boolean){
+    pos++
+    for (let i = pos; i < inputs.length; i++){
+        let comparingLevel = inputs[i].getAttribute("data-level")
+        if (comparingLevel > lev){
+            inputs[i].checked = boolean
+        }
+        else{
+            break
+        }
+    }
+}
+
+function indeterminatingDads(boolean, initialPosition){
+    let fathers = [... inputs].splice(0, initialPosition)
+    let fathersIndex = []
+
+    for (let j = initialPosition-1; j >= 0; j--){
+        let comparingLevel = fathers[j].getAttribute("data-level")
+
+        //verificar se já há um elemento de tal nível como indeterminate,
+        //para evitar que elementos "irmãos" tenham indeterminate
+        
+        if (comparingLevel < lev){
+            if (fathersIndex.find(index => index === comparingLevel) == undefined){
+                fathers[j].indeterminate = boolean
+            }
+        }
+        fathersIndex.push(comparingLevel)
+    }
+}
