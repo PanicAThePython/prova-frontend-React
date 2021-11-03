@@ -1,9 +1,8 @@
 import React from 'react'
 import './style.css'
 import datas from './data.json'
-
-let sons = []
-let dads = []
+import { isDisplay, isChecked, indeterminatingDads } from './eventFunctions'
+import {isLocalStorageEmpty} from './storageFunctions'
 
 let values
 let level = 0
@@ -80,61 +79,8 @@ const inputs = document.getElementsByTagName('input')
 let pos
 let lev
 
-// localStorage.removeItem("sons")
-// localStorage.removeItem("dads")
-
-function isLocalStorageEmpty(local){
-    if (localStorage.getItem(local) !== null){
-        if (local === 'sons'){
-            sons = localStorage.getItem(local)
-            validatingSons()
-        }
-        else{
-            dads = localStorage.getItem(local)
-            validatingDads()
-        }
-    }
-}
 isLocalStorageEmpty('sons')
 isLocalStorageEmpty('dads')
-
-function toNumber(array){
-    let items = array
-    for (let i = 0; i < items.length; i++){
-        items[i] = parseInt(items[i])
-    }
-    return items
-}
-
-function settingState(type, items){
-    for (let i = 0; i < items.length; i++){
-        let id = items[i]
-        if (type === 'sons'){
-            inputs[id].checked = true
-
-        }else{
-            inputs[id].indeterminate = true
-        }
-    }
-}
-
-function validatingSons(){
-    sons = sons.split(',')
-    let items = toNumber(sons)
-
-    if (items[0] >= 0){
-        settingState('sons', items)
-    }
-}
-
-function validatingDads(){
-    dads = dads.split(',')
-    let items = toNumber(dads)
-
-    if (items[0] >= 0){
-        settingState('dads', items)
-    }
-}
 
 const clicked = e =>{
     pos = e.target.getAttribute("data-position")
@@ -142,17 +88,15 @@ const clicked = e =>{
     let initialPosition = pos
 
     if (inputs[pos].checked){
-        isChecked(true)
-        indeterminatingDads(true, initialPosition)
+        isChecked(true, pos, lev)
+        indeterminatingDads(true, initialPosition, lev)
     }
     else{
-        isChecked(false)
-        indeterminatingDads(false, initialPosition)
+        isChecked(false, pos, lev)
+        indeterminatingDads(false, initialPosition, lev)
     }
-    
 }
 
-const lis = document.getElementsByTagName('li')
 const labels = document.getElementsByTagName('label')
 
 const hideAndShow = e =>{
@@ -160,98 +104,14 @@ const hideAndShow = e =>{
     lev = e.target.getAttribute("data-level")
 
     if (labels[pos].getAttribute("data-hiding") === 'false'){
-        isDisplay('none')
+        isDisplay('none', pos, lev)
         e.target.setAttribute('data-hiding', true)
     }
     else{
-        isDisplay('list-item')
+        isDisplay('list-item', pos, lev)
         e.target.setAttribute('data-hiding', false)
     }
 }
 
 const Lista = () => <ul>{Object.entries(datas).map(rendering)}</ul>
 export default Lista
-
-function isDisplay(type){
-    pos++
-    for (let i = pos; i < inputs.length; i++){
-        let comparingLevel = inputs[i].getAttribute("data-level")
-        if (comparingLevel > lev){
-            lis[i].style.display = type
-        }
-        else{
-            break
-        }
-    } 
-}
-
-function isChecked(boolean){
-    let initialPosition = inputs[pos].getAttribute("data-position")
-    pos++
-    let never = true
-    for (let i = pos; i < inputs.length; i++){
-        let comparingLevel = inputs[i].getAttribute("data-level")
-        let itemPosition = inputs[i].getAttribute("data-position")
-
-        if (comparingLevel > lev){
-            never = false
-            inputs[i].checked = boolean
-            addingSons(never, boolean, initialPosition, itemPosition)
-        }
-        else{
-            break
-        }
-    }
-    //entra aqui se não possuir filhos
-    if (never){
-        addingSons(never, boolean, initialPosition)
-        never = false
-    }
-    localStorage.setItem('sons', sons)
-
-}
-
-function addingSons(never, boolean, initialPosition, itemPosition){
-    if (boolean){
-        if (sons.find(index => index === initialPosition) === undefined){
-            sons.push(initialPosition)
-        }
-        if(!never){
-            sons.push(itemPosition)
-        }
-    }
-    else{
-        if (sons.find(index => index === initialPosition) === initialPosition){
-            sons = sons.splice(initialPosition, 1)
-        }
-        if(!never){
-            sons = sons.splice(itemPosition, 1)
-        }
-    }
-}
-
-function indeterminatingDads(boolean, initialPosition){
-    let fathers = [...inputs].splice(0, initialPosition)
-    let fathersIndex = []
-
-    for (let j = initialPosition-1; j >= 0; j--){
-        let comparingLevel = fathers[j].getAttribute("data-level")
-        let itemPosition = fathers[j].getAttribute("data-position")
-
-        //verificar se já há um elemento de tal nível como indeterminate,
-        //para evitar que elementos "irmãos" tenham indeterminate
-        if (comparingLevel < lev){
-            if (fathersIndex.find(index => index === comparingLevel) === undefined){
-                fathers[j].indeterminate = boolean
-                if (boolean){
-                    dads.push(itemPosition)
-                }
-                else{
-                    dads = dads.splice(itemPosition, 1)
-                }
-            }
-        }
-        fathersIndex.push(comparingLevel)
-    }
-    localStorage.setItem('dads', dads)
-}
