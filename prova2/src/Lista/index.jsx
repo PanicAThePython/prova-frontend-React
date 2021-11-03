@@ -1,11 +1,15 @@
 import React from 'react'
 import './style.css'
 import datas from './data.json'
-     
+
+let sons = []
+let dads = []
+
 let valores
 let level = 0
 let array = []
 let position = -1
+     
 const renderiza = item => {
     valores = Object.entries(item)
     valores = valores[1][1]
@@ -77,10 +81,83 @@ const Item = ({key, value, level, position}) =>{
         return (<p></p>)
     }
 }
-    
+
 const inputs = document.getElementsByTagName('input')
 let pos
 let lev
+
+// localStorage.removeItem("sons")
+// localStorage.removeItem("dads")
+
+function isLocalStorageEmpty(local){
+    if (localStorage.getItem(local) !== null){
+        if (local === 'sons'){
+            sons = localStorage.getItem(local)
+            validatingSons()
+        }
+        else{
+            dads = localStorage.getItem(local)
+            validatingDads()
+        }
+    }
+    else{
+        
+    }
+}
+isLocalStorageEmpty('sons')
+isLocalStorageEmpty('dads')
+
+
+function validatingSons(){
+    let items = sons.split(',')
+
+    //transformando em numero
+    for (let i = 0; i < items.length; i++){
+        items[i] = parseInt(items[i])
+    }
+
+    //removendo NaN
+    for (let i = 0; i < items.length; i++){
+        if (items[i] >= 0){
+            continue
+        }
+        else{
+            items.splice(i, 1)
+        }
+    }
+
+    //dando check nos filhos
+    for (let i = 0; i < items.length; i++){
+        let id = items[i]
+        inputs[id].checked = true
+    }
+}
+
+function validatingDads(){
+    //transformando em array
+    let items = dads.split(',')
+
+    //transformando em numero
+    for (let i = 0; i < items.length; i++){
+        items[i] = parseInt(items[i])
+    }
+
+    //removendo NaN
+    for (let i = 0; i < items.length; i++){
+        if (items[i] >= 0){
+            continue
+        }
+        else{
+            items.splice(i, 1)
+        }
+    }
+
+    //dando indeterminate nos pais
+    for (let i = 0; i < items.length; i++){
+        let id = items[i]
+        inputs[id].indeterminate = true
+    }
+}
 
 const clicked = e =>{
     pos = e.target.getAttribute("data-position")
@@ -132,33 +209,58 @@ function isDisplay(type){
 }
 
 function isChecked(boolean){
+    let initialPosition = inputs[pos].getAttribute("data-position")
     pos++
     for (let i = pos; i < inputs.length; i++){
         let comparingLevel = inputs[i].getAttribute("data-level")
+        let itemPosition = inputs[i].getAttribute("data-position")
+
         if (comparingLevel > lev){
             inputs[i].checked = boolean
+            if (boolean){
+                if (sons.find(index => index === initialPosition) === undefined){
+                    sons.push(initialPosition)
+                }
+                sons.push(itemPosition)
+            }
+            else{
+                if (sons.find(index => index === initialPosition) === initialPosition){
+                    sons = sons.splice(initialPosition, 1)
+                }
+                sons = sons.splice(itemPosition, 1)
+            }
         }
         else{
             break
         }
     }
+    localStorage.setItem('sons', sons)
+
 }
 
 function indeterminatingDads(boolean, initialPosition){
-    let fathers = [... inputs].splice(0, initialPosition)
+    let fathers = [...inputs].splice(0, initialPosition)
     let fathersIndex = []
 
     for (let j = initialPosition-1; j >= 0; j--){
         let comparingLevel = fathers[j].getAttribute("data-level")
+        let itemPosition = fathers[j].getAttribute("data-position")
 
         //verificar se já há um elemento de tal nível como indeterminate,
         //para evitar que elementos "irmãos" tenham indeterminate
-        
         if (comparingLevel < lev){
-            if (fathersIndex.find(index => index === comparingLevel) == undefined){
+            if (fathersIndex.find(index => index === comparingLevel) === undefined){
                 fathers[j].indeterminate = boolean
+                if (boolean){
+                    dads.push(itemPosition)
+                }
+                else{
+                    dads = dads.splice(itemPosition, 1)
+                }
             }
         }
         fathersIndex.push(comparingLevel)
     }
+    localStorage.setItem('dads', dads)
+
 }
