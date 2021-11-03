@@ -77,14 +77,7 @@ export function indeterminatingDads(boolean, initialPosition, lev){
     localStorage.setItem('dads', dads)
 }
 
-function noRepeat(list){
-    var noRepeat = list.filter(function(el, i) {
-        return list.indexOf(el) === i;
-    });
-    list = noRepeat
-}
-
- function addingSons(never, boolean, initialPosition, itemPosition){
+function addingSons(never, boolean, initialPosition, itemPosition){
     if (boolean){
         if (sons.find(index => index === initialPosition) === undefined){
             sons.push(initialPosition)
