@@ -5,36 +5,31 @@ import datas from './data.json'
 let sons = []
 let dads = []
 
-let valores
+let values
 let level = 0
-let array = []
 let position = -1
      
-const renderiza = item => {
-    valores = Object.entries(item)
-    valores = valores[1][1]
-    valores = Object.entries(valores)
-    array.push(valores)
+const rendering = item => {
+    values = Object.entries(item)
+    values = values[1][1]
+    values = Object.entries(values)
     position++
-    level = valores[3][1]
+    level = values[3][1]
     
-    return valores.map(([key, value])=>
+    return values.map(([key, value])=>
     typeof value == 'object'?(
-        Object.entries(value).map(renderiza)
+        Object.entries(value).map(rendering)
     ):(
-        <Item type={key} value={value} level={level} position={position}/>
+        <Item value={value} level={level} position={position}/>
         )
     )
 }
 
-const Item = ({key, value, level, position}) =>{
-    const letras = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+const Item = ({value, level, position}) =>{
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÉ'
 
-    if (typeof value == 'string' && letras.match(value[0])){
+    if (typeof value == 'string' && letters.match(value[0])){
         position-=1000
-        if (position > 6){
-            position--
-        }
 
         switch(level){
             case 0:
@@ -74,11 +69,10 @@ const Item = ({key, value, level, position}) =>{
                     )
             default:
                 break
-        }
-        
+        } 
     }
     else{
-        return (<p></p>)
+        return (<ul></ul>)
     }
 }
 
@@ -100,62 +94,45 @@ function isLocalStorageEmpty(local){
             validatingDads()
         }
     }
-    else{
-        
-    }
 }
 isLocalStorageEmpty('sons')
 isLocalStorageEmpty('dads')
 
-
-function validatingSons(){
-    let items = sons.split(',')
-
-    //transformando em numero
+function toNumber(array){
+    let items = array
     for (let i = 0; i < items.length; i++){
         items[i] = parseInt(items[i])
     }
+    return items
+}
 
-    //removendo NaN
-    for (let i = 0; i < items.length; i++){
-        if (items[i] >= 0){
-            continue
-        }
-        else{
-            items.splice(i, 1)
-        }
-    }
-
-    //dando check nos filhos
+function settingState(type, items){
     for (let i = 0; i < items.length; i++){
         let id = items[i]
-        inputs[id].checked = true
+        if (type === 'sons'){
+            inputs[id].checked = true
+
+        }else{
+            inputs[id].indeterminate = true
+        }
+    }
+}
+
+function validatingSons(){
+    sons = sons.split(',')
+    let items = toNumber(sons)
+
+    if (items[0] >= 0){
+        settingState('sons', items)
     }
 }
 
 function validatingDads(){
-    //transformando em array
-    let items = dads.split(',')
+    dads = dads.split(',')
+    let items = toNumber(dads)
 
-    //transformando em numero
-    for (let i = 0; i < items.length; i++){
-        items[i] = parseInt(items[i])
-    }
-
-    //removendo NaN
-    for (let i = 0; i < items.length; i++){
-        if (items[i] >= 0){
-            continue
-        }
-        else{
-            items.splice(i, 1)
-        }
-    }
-
-    //dando indeterminate nos pais
-    for (let i = 0; i < items.length; i++){
-        let id = items[i]
-        inputs[id].indeterminate = true
+    if (items[0] >= 0){
+        settingState('dads', items)
     }
 }
 
@@ -192,7 +169,7 @@ const hideAndShow = e =>{
     }
 }
 
-const Lista = () => <ul>{Object.entries(datas).map(renderiza)}</ul>
+const Lista = () => <ul>{Object.entries(datas).map(rendering)}</ul>
 export default Lista
 
 function isDisplay(type){
@@ -211,31 +188,46 @@ function isDisplay(type){
 function isChecked(boolean){
     let initialPosition = inputs[pos].getAttribute("data-position")
     pos++
+    let never = true
     for (let i = pos; i < inputs.length; i++){
         let comparingLevel = inputs[i].getAttribute("data-level")
         let itemPosition = inputs[i].getAttribute("data-position")
 
         if (comparingLevel > lev){
+            never = false
             inputs[i].checked = boolean
-            if (boolean){
-                if (sons.find(index => index === initialPosition) === undefined){
-                    sons.push(initialPosition)
-                }
-                sons.push(itemPosition)
-            }
-            else{
-                if (sons.find(index => index === initialPosition) === initialPosition){
-                    sons = sons.splice(initialPosition, 1)
-                }
-                sons = sons.splice(itemPosition, 1)
-            }
+            addingSons(never, boolean, initialPosition, itemPosition)
         }
         else{
             break
         }
     }
+    //entra aqui se não possuir filhos
+    if (never){
+        addingSons(never, boolean, initialPosition)
+        never = false
+    }
     localStorage.setItem('sons', sons)
 
+}
+
+function addingSons(never, boolean, initialPosition, itemPosition){
+    if (boolean){
+        if (sons.find(index => index === initialPosition) === undefined){
+            sons.push(initialPosition)
+        }
+        if(!never){
+            sons.push(itemPosition)
+        }
+    }
+    else{
+        if (sons.find(index => index === initialPosition) === initialPosition){
+            sons = sons.splice(initialPosition, 1)
+        }
+        if(!never){
+            sons = sons.splice(itemPosition, 1)
+        }
+    }
 }
 
 function indeterminatingDads(boolean, initialPosition){
@@ -262,5 +254,4 @@ function indeterminatingDads(boolean, initialPosition){
         fathersIndex.push(comparingLevel)
     }
     localStorage.setItem('dads', dads)
-
 }
